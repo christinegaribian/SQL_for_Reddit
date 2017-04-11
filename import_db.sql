@@ -72,15 +72,17 @@ VALUES
   ("Where can I go rollerskating in SF?", "I just came to the city and
     I would love to go rollerskating", 1),
   ("What are some of the best jobs in California?", "Trying to change my
-    career", 2);
+    career", 2),
+  ("How much sleep do I need?", "Just tryna maximize life...", 1);
 
 
 INSERT INTO
-  question_follows (users_id, questions_id)
+  question_follows (questions_id, users_id)
 VALUES
-  ((SELECT id from users where fname = "Christine"), 1),
-  ((SELECT id from users where fname = "Hayg"), 1),
-  ((SELECT id from users where fname = "AA"), 2);
+  (1, (SELECT id from users where fname = "Christine")),
+  (2, (SELECT id from users where fname = "Christine")),
+  (2, (SELECT id from users where fname = "AA")),
+  (1, (SELECT id from users where fname = "Hayg"));
 --
 -- INSERT INTO
 --   question_follows (questions_id, users_id)
