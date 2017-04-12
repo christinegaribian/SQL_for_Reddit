@@ -56,7 +56,6 @@ CREATE TABLE question_likes (
 
 
 
-
 INSERT INTO
   users (fname, lname)
 VALUES
@@ -82,7 +81,9 @@ VALUES
   (1, (SELECT id from users where fname = "Christine")),
   (2, (SELECT id from users where fname = "Christine")),
   (2, (SELECT id from users where fname = "AA")),
-  (1, (SELECT id from users where fname = "Hayg"));
+  (1, (SELECT id from users where fname = "AA")),
+  (1, (SELECT id from users where fname = "Hayg")),
+  (3, (SELECT id from users where fname = "Hayg"));
 --
 -- INSERT INTO
 --   question_follows (questions_id, users_id)
@@ -99,3 +100,11 @@ VALUES
   (1, null, 3, "I think there's a church or something"),
   (1, 1, 1, "Noooooo way really?"),
   (1, 1, 2, "Yeah I heard the same thing");
+
+
+INSERT INTO
+  question_likes (questions_id, users_id)
+VALUES
+  (1, 2),
+  (1, 3),
+  (2, 3);
