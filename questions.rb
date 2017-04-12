@@ -11,42 +11,47 @@ class QuestionsDBConnection < SQLite3::Database
   end
 end
 
+CLASS_NAMES = {
+  "Question"=>"questions",
+  "User"=>"users",
+  "Reply"=>"replies",
+  "QuestionLike"=>"question_likes",
+  "QuestionFollow"=>"question_follows"
+}
 class ModelBase
-  def self.find_by_id
-
+  def self.find_by_id(id)
+    self.all.select{ |item| item.id == id }
   end
 
+  def self.all
+    curr_class = self.to_s
+    data = QuestionsDBConnection.instance.execute("SELECT * FROM #{CLASS_NAMES[curr_class]}")
+    data.map { |datum| self.new(datum) }
+  end
+
+  # def where(options)
+  #   table_name = CLASS_NAMES[self.class]
+  #   result = QuestionsDBConnection.instance.execute(<<-SQL, users_id)
+  #     SELECT
+  #       *
+  #     FROM
+  #       table_name
+  #     WHERE
+  #       users_id = ?
+  #   SQL
+  #
+  # end
 end
 
 class Question < ModelBase
   attr_accessor :title, :body, :users_id
   attr_reader :id
 
-
   def initialize(options)
     @id = options['id']
     @title = options['title']
     @body = options['body']
     @users_id = options['users_id']
-  end
-
-  def self.all
-    data = QuestionsDBConnection.instance.execute("SELECT * FROM questions")
-    data.map { |datum| Question.new(datum) }
-  end
-
-  def self.find_by_id(id)
-    question = QuestionsDBConnection.instance.execute(<<-SQL, id)
-      SELECT
-        *
-      FROM
-        questions
-      WHERE
-        id = ?
-    SQL
-    return nil unless question.length > 0
-
-    Question.new(question.first)
   end
 
   def self.find_by_author_id(users_id)
@@ -83,7 +88,6 @@ class Question < ModelBase
   def self.most_liked(n)
     QuestionFollow.most_liked_questions(n)
   end
-
 
   def create
     QuestionsDBConnection.instance.execute(<<-SQL, @title, @body, @users_id)
@@ -124,25 +128,6 @@ class User < ModelBase
     @id = options['id']
     @fname = options['fname']
     @lname = options['lname']
-  end
-
-  def self.all
-    data = QuestionsDBConnection.instance.execute("SELECT * FROM users")
-    data.map { |datum| User.new(datum) }
-  end
-
-  def self.find_by_id(id)
-    user = QuestionsDBConnection.instance.execute(<<-SQL, id)
-      SELECT
-        *
-      FROM
-        users
-      WHERE
-        id = ?
-    SQL
-    return nil unless user.length > 0
-
-    User.new(user.first)
   end
 
   def self.find_by_name(fname, lname)
@@ -243,25 +228,6 @@ class Reply < ModelBase
     @body = options['body']
   end
 
-  def self.all
-    data = QuestionsDBConnection.instance.execute("SELECT * FROM replies")
-    data.map { |datum| Reply.new(datum) }
-  end
-
-  def self.find_by_user_id(users_id)
-    reply = QuestionsDBConnection.instance.execute(<<-SQL, users_id)
-      SELECT
-        *
-      FROM
-        replies
-      WHERE
-        users_id = ?
-    SQL
-    return nil unless reply.length > 0
-
-    reply.map {|r| Reply.new(r) }
-  end
-
   def self.find_by_question_id(questions_id)
     reply = QuestionsDBConnection.instance.execute(<<-SQL, questions_id)
       SELECT
@@ -335,11 +301,6 @@ class QuestionLike < ModelBase
   def initialize(options)
     @questions_id = options['questions_id']
     @users_id = options['users_id']
-  end
-
-  def self.all
-    data = QuestionsDBConnection.instance.execute("SELECT * FROM question_likes")
-    data.map { |datum| QuestionLike.new(datum) }
   end
 
   def self.likers_for_question_id(questions_id)
@@ -432,10 +393,6 @@ class  QuestionFollow < ModelBase
     @users_id = options['users_id']
   end
 
-  def self.all
-    data = QuestionsDBConnection.instance.execute("SELECT * FROM question_follows")
-    data.map { |datum| QuestionFollow.new(datum) }
-  end
 
   def self.find_by_question_id(questions_id)
     question_follow = QuestionsDBConnection.instance.execute(<<-SQL, questions_id)
