@@ -11,7 +11,14 @@ class QuestionsDBConnection < SQLite3::Database
   end
 end
 
-class Question
+class ModelBase
+  def self.find_by_id
+
+  end
+
+end
+
+class Question < ModelBase
   attr_accessor :title, :body, :users_id
   attr_reader :id
 
@@ -108,7 +115,7 @@ class Question
   end
 end
 
-class User
+class User < ModelBase
   attr_accessor :fname, :lname
   attr_reader :id
 
@@ -191,10 +198,39 @@ class User
   def liked_questions
     QuestionLike.liked_questions_for_user_id(@id)
   end
+
+  def create
+    QuestionsDBConnection.instance.execute(<<-SQL, @fname, @lname)
+      INSERT INTO
+        users (fname, lname)
+      VALUES
+        (?, ?)
+    SQL
+    @id = QuestionsDBConnection.instance.last_insert_row_id
+  end
+
+  def update
+    QuestionsDBConnection.instance.execute(<<-SQL, @fname, @lname, @id)
+      UPDATE
+        users
+      SET
+        fname = ?, lname = ?
+      WHERE
+        id = ?
+    SQL
+  end
+
+  def save
+    if @id.nil?
+      create
+    else
+      update
+    end
+  end
 end
 
 
-class Reply
+class Reply < ModelBase
   attr_accessor :questions_id, :parent_id, :users_id, :body
   attr_reader :id
 
@@ -259,9 +295,40 @@ class Reply
       chil.parent_id = @id
     end
   end
+
+  def create
+    QuestionsDBConnection.instance.execute(
+    <<-SQL, @questions_id, @parent_id, @users_id, @body)
+      INSERT INTO
+        replies (questions_id, parent_id, users_id, body)
+      VALUES
+        (?, ?, ?, ?)
+    SQL
+    @id = QuestionsDBConnection.instance.last_insert_row_id
+  end
+
+  def update
+    QuestionsDBConnection.instance.execute(
+    <<-SQL, @questions_id, @parent_id, @users_id, @body, @id)
+      UPDATE
+        replies
+      SET
+        questions_id = ?, parent_id = ?, users_id = ?, body = ?
+      WHERE
+        id = ?
+    SQL
+  end
+
+  def save
+    if @id.nil?
+      create
+    else
+      update
+    end
+  end
 end
 
-class QuestionLike
+class QuestionLike < ModelBase
   attr_reader :questions_id, :users_id
 
 
@@ -355,7 +422,7 @@ class QuestionLike
 end
 
 
-class  QuestionFollow
+class  QuestionFollow < ModelBase
   attr_reader :questions_id, :users_id, :id
 
 
